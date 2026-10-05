@@ -1,0 +1,146 @@
+-- โค้ดสร้าง UI และฟังก์ชันหลัก (Aimbot & ESP) สำหรับ Roblox
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- 1. สร้าง ScreenGui หลัก
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RobloxScriptHub"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- 2. สร้างปุ่มสำหรับเปิด/ปิดเมนู (Toggle Button)
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Name = "ToggleButton"
+toggleBtn.Size = UDim2.new(0, 140, 0, 45)
+toggleBtn.Position = UDim2.new(0, 20, 0, 20)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.TextSize = 16
+toggleBtn.Font = Enum.Font.SourceSansBold
+toggleBtn.Text = "ปิด Menu"
+toggleBtn.Parent = screenGui
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 8)
+btnCorner.Parent = toggleBtn
+
+-- 3. สร้างหน้าต่างหลัก (Main Frame)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 320, 0, 310)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -155)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+mainFrame.Visible = true
+mainFrame.Parent = screenGui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 12)
+frameCorner.Parent = mainFrame
+
+-- หัวข้อเมนู
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 45)
+titleLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 18
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.Text = "⚙️ ระบบสคริปต์ควบคุมเกม"
+titleLabel.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = titleLabel
+
+-- ฟังก์ชันสร้างปุ่มสลับการทำงาน (Toggle Feature Buttons)
+local function createFeatureButton(name, posY, defaultState)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 280, 0, 45)
+	btn.Position = UDim2.new(0, 20, 0, posY)
+	btn.BackgroundColor3 = defaultState and Color3.fromRGB(46, 139, 87) or Color3.fromRGB(50, 50, 50)
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.TextSize = 15
+	btn.Font = Enum.Font.SourceSansBold
+	btn.Text = name .. ": " .. (defaultState and "เปิด" or "ปิด")
+	btn.Parent = mainFrame
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = btn
+	
+	return btn
+end
+
+-- สร้างปุ่มสำหรับฟังก์ชันทั้ง 4
+local btnHeadLock = createFeatureButton("ล็อกหัว (Head Lock)", 60, false)
+local btnTorsoLock = createFeatureButton("ล็อกตัว (Torso Lock)", 115, false)
+local btnInventory = createFeatureButton("มองของในกระเป๋า (Inventory)", 170, false)
+local btnHealthESP = createFeatureButton("มองเลือด (Health ESP)", 225, false)
+
+-- สถานะการทำงานของแต่ละฟังก์ชัน
+local states = {
+	HeadLock = false,
+	TorsoLock = false,
+	Inventory = false,
+	HealthESP = false
+}
+
+-- ระบบคลิกเปลี่ยนสถานะปุ่มฟังก์ชัน
+btnHeadLock.MouseButton1Click:Connect(function()
+	states.HeadLock = not states.HeadLock
+	if states.HeadLock then states.TorsoLock = false end -- ป้องกันเปิดซ้อนกัน
+	btnHeadLock.BackgroundColor3 = states.HeadLock and Color3.fromRGB(46, 139, 87) or Color3.fromRGB(50, 50, 50)
+	btnHeadLock.Text = "ล็อกหัว (Head Lock): " .. (states.HeadLock and "เปิด" or "ปิด")
+	btnTorsoLock.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	btnTorsoLock.Text = "ล็อกตัว (Torso Lock): ปิด"
+end)
+
+btnTorsoLock.MouseButton1Click:Connect(function()
+	states.TorsoLock = not states.TorsoLock
+	if states.TorsoLock then states.HeadLock = false end
+	btnTorsoLock.BackgroundColor3 = states.TorsoLock and Color3.fromRGB(46, 139, 87) or Color3.fromRGB(50, 50, 50)
+	btnTorsoLock.Text = "ล็อกตัว (Torso Lock): " .. (states.TorsoLock and "เปิด" or "ปิด")
+	btnHeadLock.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	btnHeadLock.Text = "ล็อกหัว (Head Lock): ปิด"
+end)
+
+btnInventory.MouseButton1Click:Connect(function()
+	states.Inventory = not states.Inventory
+	btnInventory.BackgroundColor3 = states.Inventory and Color3.fromRGB(46, 139, 87) or Color3.fromRGB(50, 50, 50)
+	btnInventory.Text = "มองของในกระเป๋า (Inventory): " .. (states.Inventory and "เปิด" or "ปิด")
+end)
+
+btnHealthESP.MouseButton1Click:Connect(function()
+	states.HealthESP = not states.HealthESP
+	btnHealthESP.BackgroundColor3 = states.HealthESP and Color3.fromRGB(46, 139, 87) or Color3.fromRGB(50, 50, 50)
+	btnHealthESP.Text = "มองเลือด (Health ESP): " .. (states.HealthESP and "เปิด" or "ปิด")
+end)
+
+-- 4. ระบบ Toggle เปิด/ปิด ตัวหน้าต่างหลัก
+local isMenuOpen = true
+toggleBtn.MouseButton1Click:Connect(function()
+	isMenuOpen = not isMenuOpen
+	mainFrame.Visible = isMenuOpen
+	toggleBtn.Text = isMenuOpen and "ปิด Menu" or "เปิด Menu"
+	toggleBtn.BackgroundColor3 = isMenuOpen and Color3.fromRGB(45, 45, 45) or Color3.fromRGB(46, 139, 87)
+end)
+
+-- 5. ลูปการทำงานเบื้องหลัง (Aimbot & ESP Logic)
+RunService.RenderStepped:Connect(function()
+	-- ค้นหาเป้าหมายที่ใกล้ที่สุดสำหรับระบบล็อก
+	if states.HeadLock or states.TorsoLock then
+		local closestTarget = nil
+		local shortestDistance = math.huge
+		
+		for _, otherPlayer in ipairs(Players:GetPlayers()) do
+			if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("Humanoid") then
+				local humanoid = otherPlayer.Character.Humanoid
+				if humanoid.Health > 0 then
+					local targetPart = states.HeadLock and otherPlayer.Character:FindFirstChild("Head") or otherPlayer.Character:FindFirstChild("UpperTorso") or otherPlayer.Character:FindFirstChild("Torso")
+					if targetPart then
+						local screenPoint, onScreen = camera:WorldToViewportPoint(targetPart.Position)
+						local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)).Magnitude
+						if distance < shortestDistance
